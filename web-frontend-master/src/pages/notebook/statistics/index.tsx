@@ -4,6 +4,8 @@ import NotebookWorkspace from '../components/NotebookWorkspace';
 import { loadNotebookData, mergeNoteFavorite, type NotebookData, type NotebookNote } from '../note/storage';
 import './index.less';
 
+// 统计页只做展示：按 7/30/全部 时间窗聚合，字数用纯文本粗算；收藏态仍走 mergeNoteFavorite，和列表一致。
+
 function toTime(t: string): number {
   const x = Date.parse(t);
   return Number.isNaN(x) ? 0 : x;

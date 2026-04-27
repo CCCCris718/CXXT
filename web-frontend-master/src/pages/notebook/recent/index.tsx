@@ -12,6 +12,8 @@ import {
   saveNotebookData,
 } from '../note/storage';
 
+// 最近编辑：按本地 save 历史拼时间线，diff 摘要用 splitSegments 按句切，纯前端展示。
+
 function sanitizeRichHtml(html: string) {
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }

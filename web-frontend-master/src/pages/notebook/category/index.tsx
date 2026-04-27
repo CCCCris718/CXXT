@@ -20,6 +20,8 @@ import {
 } from '../note/storage';
 import './index.less';
 
+// 分类增删改、批量把笔记划到某类；关联篇数用 listNotebookNotes 拉一遍算，和笔记页 filter 逻辑别脱节。
+
 type CategoryWithDescription = NotebookCategory & { description?: string };
 
 function toDisplayTime(time?: string) {

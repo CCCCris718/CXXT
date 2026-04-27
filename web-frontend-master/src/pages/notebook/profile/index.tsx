@@ -15,6 +15,18 @@ import './index.less';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** 解析 request 抛出的 BizError，与 app 层 errorConfig 一致；需配合 throwError + skipErrorHandler 使用。 */
+function getNotebookApiErrorMessage(err: unknown, fallback: string): string {
+  if (err === undefined || err === null) return fallback;
+  if (typeof err === 'object') {
+    const o = err as { name?: string; info?: { message?: string }; message?: string };
+    if (o.name === 'BizError' && o.info?.message) return o.info.message;
+    if (o.info?.message) return o.info.message;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return fallback;
+}
+
 function msUntilNextIdChange(t?: API.Token): number {
   if (!t?.notebookIdLastChangedAt) return 0;
   const last = new Date(t.notebookIdLastChangedAt).getTime();
@@ -70,11 +82,14 @@ const ProfilePage: React.FC = () => {
     }
     setPwdVerifying(true);
     try {
-      await verifyNotebookCurrentPassword({ password: p });
+      await verifyNotebookCurrentPassword(
+        { password: p },
+        { throwError: true, skipErrorHandler: true },
+      );
       message.success('验证通过，请设置新密码');
       setPwdStep(2);
     } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : '验证失败');
+      message.error(getNotebookApiErrorMessage(e, '验证失败'));
     } finally {
       setPwdVerifying(false);
     }
@@ -109,20 +124,25 @@ const ProfilePage: React.FC = () => {
     setChangingId(true);
     try {
       const oldK = getNotebookLoginKey(token as API.Token);
-      const nextTok = await changeNotebookLoginId({ newNotebookId: v, password: passDraft });
-      if (nextTok) {
-        const newK = (nextTok.userCode || v).trim();
-        migrateLocalNotebookStorageOnLoginIdChange(oldK, newK);
-        migrateProfileLoginKey(oldK, newK);
-        setLoginDisplayName(newK);
-        setInitialState((s) => ({ ...s, currentToken: nextTok }));
-        applyNotebookProfileFromToken(nextTok);
-        setIdModalOpen(false);
-        message.success('用户名已更新');
-        window.setTimeout(() => window.location.reload(), 300);
+      const nextTok = await changeNotebookLoginId(
+        { newNotebookId: v, password: passDraft },
+        { throwError: true, skipErrorHandler: true },
+      );
+      if (!nextTok) {
+        message.error('修改未成功，请重试');
+        return;
       }
+      const newK = (nextTok.userCode || v).trim();
+      migrateLocalNotebookStorageOnLoginIdChange(oldK, newK);
+      migrateProfileLoginKey(oldK, newK);
+      setLoginDisplayName(newK);
+      setInitialState((s) => ({ ...s, currentToken: nextTok }));
+      applyNotebookProfileFromToken(nextTok);
+      setIdModalOpen(false);
+      message.success('用户名已更新');
+      window.setTimeout(() => window.location.reload(), 300);
     } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : '修改失败');
+      message.error(getNotebookApiErrorMessage(e, '修改失败'));
     } finally {
       setChangingId(false);
     }
@@ -146,11 +166,14 @@ const ProfilePage: React.FC = () => {
     }
     setPwdSubmitting(true);
     try {
-      await changeNotebookPassword({ oldPassword: o, newPassword: n, confirmNewPassword: c });
+      await changeNotebookPassword(
+        { oldPassword: o, newPassword: n, confirmNewPassword: c },
+        { throwError: true, skipErrorHandler: true },
+      );
       message.success('密码已更新');
       resetPwdForm();
     } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : '修改失败');
+      message.error(getNotebookApiErrorMessage(e, '修改失败'));
     } finally {
       setPwdSubmitting(false);
     }

@@ -47,7 +47,6 @@
     "@ant-design/icons": "^4.7.0",
     "@ant-design/pro-components": "^2.3.37",
     "@ant-design/use-emotion-css": "1.0.4",
-    "@turf/turf": "^7.3.5",
     "@umijs/route-utils": "^2.1.3",
     "antd": "^5.0.0",
     "axios": "^1.15.2",

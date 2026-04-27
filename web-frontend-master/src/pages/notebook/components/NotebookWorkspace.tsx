@@ -12,6 +12,8 @@ import { loadNotebookData } from '../note/storage';
 import AutoFitOneLine from './AutoFitOneLine';
 import './NotebookWorkspace.less';
 
+// 各 /notebook/* 页面共用布局：侧栏、主题/字号（与 note 页同 key）、退出登录；middle 插槽放列表，没有则主区拉满。
+
 type NotebookWorkspaceProps = {
   /** 中间功能栏（如笔记列表）。个人中心等页面可省略，主内容区会占满剩余宽度。 */
   middle?: React.ReactNode;

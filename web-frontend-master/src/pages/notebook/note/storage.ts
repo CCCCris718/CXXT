@@ -1,4 +1,4 @@
-/** 笔记本数据：持久化到 localStorage，后续可替换为后端 API */
+/** 笔记本数据：主要落 localStorage；v2 key 按登录账号隔离，换号不会串数据。 */
 
 import { getNotebookLoginKey } from '@/utils/displayUserName';
 

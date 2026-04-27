@@ -17,6 +17,8 @@ import {
   type NotebookData,
 } from '../note/storage';
 
+// 收藏列表：接口 favorite 字段可能是 0/1，展示前用 mergeNoteFavorite 和 storage 对齐。
+
 function sanitizeRichHtml(html: string) {
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }

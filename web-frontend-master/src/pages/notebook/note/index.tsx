@@ -204,6 +204,8 @@ const TOOLBAR_FORMAT_INITIAL: ToolbarFormatState = {
   canRedo: false,
 };
 
+// 下面一串小函数都是给工具栏用的：从 Selection 推断当前是否在编辑器里、块标签、h1/p、对齐方式等。
+
 function selectionInEditorHost(editor: HTMLElement): boolean {
   if (typeof window === 'undefined') return false;
   const sel = window.getSelection();
@@ -385,6 +387,8 @@ function computeToolbarFormatState(editor: HTMLDivElement | null): ToolbarFormat
     canRedo,
   };
 }
+
+// 状态机概览：currentNoteId、editorHtml、categories/notes 来自接口；定时自动保存读 settings.autoSaveInterval；关标签页前会 flush。
 
 const NotePage: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');

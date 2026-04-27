@@ -5,9 +5,16 @@ import { login } from '@/services/api/authentication';
 import { setLoginDisplayName } from '@/utils/displayUserName';
 import '../auth.less';
 
+function mapAuthOrOriginal(m: string): string {
+  if (/invalid username or password/i.test(m) || m.includes('用户名或密码') || m.includes('密码错误')) {
+    return '用户名或密码错误，若未注册请先注册。';
+  }
+  return m;
+}
+
 /** 登录接口 BizError / Axios 错误等转为页面展示文案（认证失败不提示「网络 / Mock」） */
 function getLoginErrorMessage(err: unknown): string {
-  if (err == null) return '登录失败，请稍后重试';
+  if (err === undefined || err === null) return '登录失败，请稍后重试';
   if (typeof err === 'object') {
     const o = err as {
       name?: string;
@@ -38,13 +45,6 @@ function getLoginErrorMessage(err: unknown): string {
     }
   }
   return '登录失败，请稍后重试';
-}
-
-function mapAuthOrOriginal(m: string): string {
-  if (/invalid username or password/i.test(m) || m.includes('用户名或密码') || m.includes('密码错误')) {
-    return '用户名或密码错误，若未注册请先注册。';
-  }
-  return m;
 }
 
 const Login: React.FC = () => {

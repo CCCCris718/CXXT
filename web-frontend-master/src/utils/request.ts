@@ -20,7 +20,8 @@ export async function request<T>(
 ): Promise<T | undefined> {
   // 自定义开关勿传给 umi/axios，避免被透传为未知 config
   const throwError = Boolean(options['throwError']);
-  const { throwError: _t, ...umiOpts } = options;
+  const umiOpts = { ...options };
+  delete umiOpts.throwError;
 
   if (!throwError) {
     try {
