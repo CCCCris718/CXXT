@@ -1,0 +1,126 @@
+.nb-profile-card {
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+}
+
+/* 仅展示用户名：无 Card 头部分栏线 */
+.nb-profile-card:not(.nb-profile-card--section) .ant-card-body {
+  padding: 24px 26px 20px;
+}
+
+.nb-profile-username-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nb-profile-username-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.nb-profile-username-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.nb-profile-username-cooldown {
+  font-size: 14px;
+  color: #ca8a04;
+  line-height: 1.5;
+}
+
+.nb-profile-username-actions {
+  margin-top: 4px;
+}
+
+.nb-profile-username-actions .ant-btn {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nb-profile-modal-lead {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+}
+
+.nb-profile-modal-field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.nb-profile-card--section .ant-card-head {
+  min-height: 56px;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 24px;
+}
+
+.nb-profile-card--section .ant-card-body {
+  padding: 20px 26px 24px;
+}
+
+.nb-profile-card-title-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.nb-profile-pwd {
+  max-width: 520px;
+}
+
+.nb-profile-pwd-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.nb-profile-pwd-label {
+  flex: 0 0 100px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+@media (max-width: 520px) {
+  .nb-profile-pwd-label {
+    flex: 0 0 100%;
+  }
+}
+
+.nb-profile-pwd-input {
+  flex: 1 1 280px;
+  min-width: 0;
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+.nb-profile-pwd-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.nb-profile-pwd-actions .ant-btn {
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}

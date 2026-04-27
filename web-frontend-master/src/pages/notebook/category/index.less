@@ -1,0 +1,469 @@
+.nb-category-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.nb-category-main-title {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.15;
+  color: #1e293b;
+}
+
+.nb-category-main-sub {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.nb-category-top-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+  align-items: center;
+}
+
+.nb-category-top-link {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.nb-category-top-link.danger {
+  color: #ef4444;
+}
+
+.nb-category-save-btn {
+  border: none;
+  border-radius: 11px;
+  height: 36px;
+  padding: 0 16px;
+  color: #fff;
+  background: #0b74ff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nb-category-save-btn:hover {
+  background: #095fd1;
+}
+
+.nb-category-add-btn {
+  border: 1px solid #0b74ff;
+  border-radius: 11px;
+  height: 36px;
+  padding: 0 16px;
+  color: #0b74ff;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nb-category-add-btn:hover {
+  background: #eff6ff;
+}
+
+.nb-category-pill-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.nb-category-pill-btn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nb-category-pill-btn.danger {
+  color: #ef4444;
+  border-color: #fecaca;
+  background: #fff;
+}
+
+/* 与搜索同一张白底卡片；整卡略离列顶，新建+排序与搜索多留一截，避免全挤在顶部 */
+.nb-ws-panel.nb-category-side-panel {
+  margin-top: 14px;
+  padding-bottom: 12px;
+}
+
+.nb-ws-panel.nb-category-side-panel .nb-ws-search {
+  margin-bottom: 10px;
+  min-height: 40px;
+  padding: 9px 12px;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.nb-category-side-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* 两个主操作略下沉，不紧贴搜索框下沿 */
+  margin-top: 12px;
+  padding-top: 4px;
+}
+
+.nb-category-create-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.nb-category-create-btn:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.nb-category-create-btn:active {
+  background: #bfdbfe;
+}
+
+.nb-category-sort-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  padding: 4px 0;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.nb-category-sort-hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.nb-category-sort-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nb-category-sort-toggle:hover {
+  background: #f1f5f9;
+  color: #1d4ed8;
+}
+
+.nb-category-sort-caret {
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0.75;
+  position: relative;
+  top: 0.5px;
+}
+
+.nb-category-list-item {
+  transition: 0.18s ease;
+  border-color: #eef2f7;
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.nb-category-list-item:hover {
+  border-color: #dbeafe;
+  background: #fbfdff;
+}
+
+.nb-category-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.nb-category-list-title {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 21px;
+}
+
+.nb-category-count-badge {
+  min-width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background: #eef5ff;
+  color: #0b74ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.nb-category-list-desc {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.nb-category-list-meta {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+  line-height: 1.55;
+}
+
+.nb-category-main-card {
+  border: 1px solid #edf2f7;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+
+.nb-category-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.nb-category-intro-card {
+  margin: 10px 0 14px;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fbfcff;
+}
+
+.nb-category-intro-text {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.nb-category-created-time {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.nb-category-section-title {
+  margin: 0;
+  font-size: 14px;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #fbfcff;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.nb-category-section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+
+.nb-category-note-search {
+  width: 300px;
+}
+
+.nb-category-note-search .ant-input {
+  border-radius: 12px;
+}
+
+.nb-category-note-item {
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.nb-category-note-item:hover {
+  border-color: #dbeafe;
+  background: #fcfdff;
+}
+
+.nb-category-note-main {
+  min-width: 0;
+}
+
+.nb-category-note-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 520px;
+}
+
+.nb-category-note-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.nb-category-note-preview {
+  margin-top: 4px;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.nb-category-note-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.nb-category-note-view-btn {
+  border: 1px solid #0b74ff;
+  border-radius: 999px;
+  height: 36px;
+  padding: 0 14px;
+  color: #0b74ff;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nb-category-note-view-btn:hover {
+  background: #eff6ff;
+}
+
+.nb-category-note-actions .nb-category-pill-btn {
+  min-width: 92px;
+  height: 36px;
+}
+
+.nb-category-footer-note {
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.nb-category-empty {
+  color: #9ca3af;
+  padding: 14px 0;
+}
+
+.nb-category-modal-field + .nb-category-modal-field {
+  margin-top: 12px;
+}
+
+.nb-category-desc-count {
+  margin-top: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.nb-category-pick-list {
+  margin-top: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.nb-category-pick-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.nb-category-pick-item + .nb-category-pick-item {
+  margin-top: 6px;
+}
+
+.nb-category-pick-item:hover {
+  background: #f8fbff;
+  border-color: #dbeafe;
+}
+
+.nb-category-pick-item.checked {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.nb-category-pick-main {
+  min-width: 0;
+}
+
+.nb-category-pick-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.nb-category-pick-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .nb-category-topbar {
+    flex-direction: column;
+  }
+
+  .nb-category-top-actions {
+    padding-top: 0;
+  }
+
+  .nb-category-section-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nb-category-note-search {
+    width: 100%;
+  }
+}

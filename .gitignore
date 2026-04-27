@@ -1,0 +1,21 @@
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+web-frontend-master/node_modules/
+web-frontend-master/dist/
+web-frontend-master/src/.umi/
+web-frontend-master/src/.umi-production/
+web-frontend-master/.umi/
+web-frontend-master/.cache/
+web-frontend-master/npm-debug.log*
+
+# Java / backend
+web-backend-master/.gradle/
+web-backend-master/build/
+web-backend-master/out/
+web-backend-master/*.log
+
+# IDE
+.idea/
+.vscode/
