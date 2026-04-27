@@ -5,38 +5,52 @@ import { login } from '@/services/api/authentication';
 import { setLoginDisplayName } from '@/utils/displayUserName';
 import '../auth.less';
 
-const REMEMBER_LOGIN_KEY = 'notebook_login_remember_v1';
-
-type RememberedLogin = {
-  username: string;
-  password: string;
-};
-
-function loadRememberedLogin(): RememberedLogin | null {
-  try {
-    const raw = localStorage.getItem(REMEMBER_LOGIN_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<RememberedLogin>;
-    if (typeof parsed.username !== 'string' || typeof parsed.password !== 'string') return null;
-    return { username: parsed.username, password: parsed.password };
-  } catch {
-    return null;
+/** 登录接口 BizError / Axios 错误等转为页面展示文案（认证失败不提示「网络 / Mock」） */
+function getLoginErrorMessage(err: unknown): string {
+  if (err == null) return '登录失败，请稍后重试';
+  if (typeof err === 'object') {
+    const o = err as {
+      name?: string;
+      info?: { message?: string };
+      response?: { data?: { message?: string; success?: boolean } };
+    };
+    if (o.name === 'BizError' && o.info?.message) {
+      return mapAuthOrOriginal(o.info.message);
+    }
+    if (o.info?.message) {
+      return mapAuthOrOriginal(o.info.message);
+    }
+    const dataMsg = o.response?.data;
+    if (dataMsg && dataMsg.success === false && dataMsg.message) {
+      return mapAuthOrOriginal(dataMsg.message);
+    }
   }
+  if (err instanceof Error) {
+    const m = err.message || '';
+    if (/invalid username or password/i.test(m)) {
+      return '用户名或密码错误，若未注册请先注册。';
+    }
+    if (/network/i.test(m) || m === 'Network Error') {
+      return '网络异常，请检查网络后重试';
+    }
+    if (m && m !== 'Request failed' && m !== 'Request failed with status code 200') {
+      return m;
+    }
+  }
+  return '登录失败，请稍后重试';
 }
 
-function saveRememberedLogin(username: string, password: string) {
-  localStorage.setItem(REMEMBER_LOGIN_KEY, JSON.stringify({ username, password }));
-}
-
-function clearRememberedLogin() {
-  localStorage.removeItem(REMEMBER_LOGIN_KEY);
+function mapAuthOrOriginal(m: string): string {
+  if (/invalid username or password/i.test(m) || m.includes('用户名或密码') || m.includes('密码错误')) {
+    return '用户名或密码错误，若未注册请先注册。';
+  }
+  return m;
 }
 
 const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: 'info' | 'error' } | null>(null);
 
@@ -44,12 +58,13 @@ const Login: React.FC = () => {
     setMsg({ text, type });
   };
 
+  /** 历史版本曾把密码存 localStorage，进入登录页时清除 */
   useEffect(() => {
-    const remembered = loadRememberedLogin();
-    if (!remembered) return;
-    setUsername(remembered.username);
-    setPassword(remembered.password);
-    setRemember(true);
+    try {
+      localStorage.removeItem('notebook_login_remember_v1');
+    } catch {
+      // ignore
+    }
   }, []);
 
   const fetchUserInfo = async (): Promise<API.Token | undefined> => {
@@ -79,35 +94,43 @@ const Login: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await login({ userId: user, password: pass });
+      const res = await login(
+        { userId: user, password: pass },
+        { throwError: true, skipErrorHandler: true },
+      );
+      if (res && typeof res === 'object' && 'success' in (res as object)) {
+        const r = res as { success?: boolean; message?: string };
+        if (r.success === false) {
+          showMessage(
+            r.message
+              ? mapAuthOrOriginal(r.message)
+              : '用户名或密码错误，若未注册请先注册。',
+            'error',
+          );
+          return;
+        }
+      }
       if (!res) {
-        showMessage('登录请求失败（请检查网络或 Mock 是否开启）', 'error');
+        // 在 throwError 已开启时少见；无法区分空结果与网络问题时，避免只写「Mock/网络」误导为纯连接错误
+        showMessage('登录未成功。请核对用户名与密码；若仍失败，请检查网络与后端服务。', 'error');
         return;
       }
       if ((res as API.LoginResult).status === 'error') {
-        showMessage('账号不存在或密码错误；若还没有账号，请先注册。', 'error');
+        showMessage('用户名或密码错误，若未注册请先注册。', 'error');
         return;
       }
       const tok = res as API.Token;
       setLoginDisplayName((tok.userCode && tok.userCode.trim()) || user);
-      if (remember) {
-        saveRememberedLogin(user, pass);
-      } else {
-        clearRememberedLogin();
-      }
       const userInfo = await fetchUserInfo();
       if (userInfo) {
         const { applyNotebookProfileFromToken } = await import('@/utils/notebookUserProfile');
         applyNotebookProfileFromToken(userInfo);
       }
       const display = userInfo ? (userInfo as API.Token).userCode?.trim() || user : user;
-      let text = `登录成功，用户名：${display}`;
-      if (remember) text += '（已选择记住密码）';
-      showMessage(text, 'info');
+      showMessage(`登录成功，用户名：${display}`, 'info');
       history.push('/notebook/note');
     } catch (e: unknown) {
-      const err = e as { message?: string };
-      showMessage(err?.message || '登录失败', 'error');
+      showMessage(getLoginErrorMessage(e), 'error');
     } finally {
       setLoading(false);
     }
@@ -168,15 +191,7 @@ const Login: React.FC = () => {
               />
             </div>
 
-            <div className="nb-auth-row">
-              <label className="nb-auth-remember">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-                <span>记住密码</span>
-              </label>
+            <div className="nb-auth-row nb-auth-row--forgot-only">
               <button type="button" className="nb-auth-link-btn" onClick={() => showMessage('请联系管理员重置密码。', 'info')}>
                 忘记密码？
               </button>

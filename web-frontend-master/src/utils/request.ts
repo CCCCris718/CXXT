@@ -18,15 +18,19 @@ export async function request<T>(
   url: string,
   options: any = { method: 'GET' },
 ): Promise<T | undefined> {
-  if (!options['throwError']) {
+  // 自定义开关勿传给 umi/axios，避免被透传为未知 config
+  const throwError = Boolean(options['throwError']);
+  const { throwError: _t, ...umiOpts } = options;
+
+  if (!throwError) {
     try {
-      const resp: any = await umiRequest(url, options);
+      const resp: any = await umiRequest(url, umiOpts);
       return unwrapServiceResponse<T>(resp);
     } catch (ex) {
       return undefined;
     }
   }
-  const resp: any = await umiRequest(url, options);
+  const resp: any = await umiRequest(url, umiOpts);
   return unwrapServiceResponse<T>(resp);
 }
 

@@ -130,9 +130,9 @@ const StatisticsPage: React.FC = () => {
 
   const donutStyle = {
     background: `conic-gradient(
-      #2f63db 0deg ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,
-      #7fb0e5 ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg ${((singleClassifiedCount + multiClassifiedCount) / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,
-      #bcc6d2 ${((singleClassifiedCount + multiClassifiedCount) / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg 360deg
+      #34495e 0deg ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,
+      #94a3b8 ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg ${((singleClassifiedCount + multiClassifiedCount) / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,
+      #cbd5e1 ${((singleClassifiedCount + multiClassifiedCount) / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg 360deg
     )`,
   };
 

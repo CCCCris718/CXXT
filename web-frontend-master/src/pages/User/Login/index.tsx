@@ -36,14 +36,14 @@ const Lang = () => {
 const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
 
-  /** 与 Ant Design Pro 官方演示一致：浅蓝白渐变底，无大图背景 */
+  /** 暖色纸感底，与笔记本登录区一致 */
   const containerClassName = useEmotionCss(() => {
     return {
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100vh',
       overflow: 'auto',
-      background: 'linear-gradient(180deg, #f0f7ff 0%, #f5f9fc 42%, #fafbfc 100%)',
+      background: 'linear-gradient(180deg, #f8f9fa 0%, #f1f5f9 38%, #ffffff 100%)',
     };
   });
 
@@ -132,8 +132,8 @@ const Login: React.FC = () => {
         <ConfigProvider
           theme={{
             token: {
-              colorPrimary: '#1890ff',
-              borderRadius: 6,
+              colorPrimary: '#34495e',
+              borderRadius: 12,
             },
           }}
         >

@@ -52,7 +52,7 @@ function loadNoteSettings(): NoteSettings {
 }
 
 const NotebookWorkspace: React.FC<NotebookWorkspaceProps> = ({ middle, children }) => {
-  const hasMiddle = middle != null;
+  const hasMiddle = middle !== undefined && middle !== null;
   const { initialState, setInitialState } = useModel('@@initialState');
   const currentToken = initialState?.currentToken;
   const pathname = useLocation().pathname;

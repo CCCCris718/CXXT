@@ -3,8 +3,8 @@
   "short_name": "Ant Design Pro",
   "display": "standalone",
   "start_url": "./?utm_source=homescreen",
-  "theme_color": "#002140",
-  "background_color": "#001529",
+  "theme_color": "#34495e",
+  "background_color": "#f8f9fa",
   "icons": [
     {
       "src": "icons/icon-192x192.png",

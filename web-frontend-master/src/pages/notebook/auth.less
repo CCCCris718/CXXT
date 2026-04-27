@@ -3,20 +3,17 @@
   box-sizing: border-box;
   margin: 0;
   min-height: 100vh;
-  font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
-  background: linear-gradient(135deg, #eef4ff 0%, #f5f9ff 45%, #e9efff 100%);
+  font-family: ui-sans-serif, system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #f1f5f9 0%, #f8f9fa 45%, #ffffff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
 }
 
-.nb-auth-login.nb-auth-root {
-  background: linear-gradient(135deg, #f3eeff 0%, #eaf3ff 45%, #e2f2ff 100%);
-}
-
+.nb-auth-login.nb-auth-root,
 .nb-auth-register.nb-auth-root {
-  background: linear-gradient(135deg, #f3eeff 0%, #eaf3ff 45%, #e2f2ff 100%);
+  background: linear-gradient(165deg, #f1f5f9 0%, #f8f9fa 55%, #ffffff 100%);
 }
 
 /* 山东大学校徽：贴在白色登录卡片右上角（圆角内侧） */
@@ -55,9 +52,12 @@
   max-width: 960px;
   min-height: 560px;
   background: #fff;
-  border-radius: 20px;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12), 0 0 1px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 32px 64px -16px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* 注册页等：左右两栏直接在 container 上 grid */
@@ -78,7 +78,7 @@
 }
 
 .nb-auth-left {
-  background: linear-gradient(145deg, #3b82f6 0%, #2563eb 38%, #4f46e5 72%, #5b21b6 100%);
+  background: linear-gradient(160deg, #020617 0%, #0f172a 40%, #1e293b 72%, #334155 100%);
   color: #fff;
   padding: 48px 44px;
   display: flex;
@@ -93,10 +93,10 @@
 
 .nb-auth-left h1 {
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 24px;
-  letter-spacing: 0.5px;
-  line-height: 1.35;
+  letter-spacing: -0.03em;
+  line-height: 1.3;
 }
 
 .nb-auth-left-line,
@@ -118,7 +118,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fff;
+  background: #ffffff;
 }
 
 .nb-auth-form-wrap {
@@ -194,8 +194,8 @@
 }
 
 .nb-auth-field input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(52, 73, 94, 0.2);
 }
 
 .nb-auth-row {
@@ -205,6 +205,10 @@
   margin: 8px 0 26px;
   gap: 12px;
   font-size: 14px;
+}
+
+.nb-auth-row--forgot-only {
+  justify-content: flex-end;
 }
 
 .nb-auth-remember {
@@ -217,7 +221,7 @@
 .nb-auth-link-btn {
   border: none;
   background: none;
-  color: #2563eb;
+  color: #34495e;
   cursor: pointer;
   font-size: 14px;
   padding: 0;
@@ -225,26 +229,34 @@
 
 .nb-auth-link-btn:hover {
   text-decoration: underline;
+  color: #2c3e50;
 }
 
 .nb-auth-submit {
   width: 100%;
   border: none;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #64748b 0%, #34495e 55%, #2c3e50 100%);
   color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   padding: 14px 18px;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+  box-shadow:
+    0 8px 24px -4px rgba(52, 73, 94, 0.3),
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
 
 .nb-auth-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.32);
-  filter: brightness(1.02);
+  box-shadow:
+    0 14px 36px -6px rgba(30, 41, 59, 0.32),
+    0 4px 12px -4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  filter: brightness(1.03);
 }
 
 .nb-auth-submit:disabled {
@@ -261,9 +273,9 @@
 }
 
 .nb-auth-message.info {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
 }
 
 .nb-auth-message.error {

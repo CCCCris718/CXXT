@@ -10,7 +10,7 @@ import '../auth.less';
 
 /** 从 umi/axios 抛错中取出可读文案，便于按「用户名已被占用 / 密码过短 / …」分类展示 */
 function getRegisterErrorMessage(err: unknown): string {
-  if (err == null) return '注册失败，请稍后重试';
+  if (err === undefined || err === null) return '注册失败，请稍后重试';
   if (typeof err === 'object') {
     const o = err as { info?: { message?: string }; name?: string };
     if (o.info?.message) return o.info.message;
@@ -85,7 +85,7 @@ const Register: React.FC = () => {
         },
         { throwError: true, skipErrorHandler: true },
       );
-      if (userId == null || userId === undefined) {
+      if (userId === null || userId === undefined) {
         showMessage('注册失败，未收到服务器结果，请稍后重试。', 'error');
         return;
       }

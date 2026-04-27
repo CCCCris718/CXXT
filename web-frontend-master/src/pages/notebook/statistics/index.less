@@ -20,7 +20,7 @@
 
 .nb-stat-action-btn {
   min-height: 42px;
-  border: 1px solid #dbe3f0;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 0 18px;
   background: #fff;
@@ -35,16 +35,16 @@
 .nb-stat-action-btn:hover,
 .nb-stat-action-btn.active,
 .nb-stat-refresh {
-  border-color: #2563eb;
-  background: #2563eb;
+  border-color: #34495e;
+  background: #34495e;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(52, 73, 94, 0.2);
 }
 
 .nb-stat-action-btn:hover,
 .nb-stat-refresh:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: #2c3e50;
+  border-color: #2c3e50;
 }
 
 .nb-stat-kpis {
@@ -94,7 +94,7 @@
   min-height: 0;
   overflow-y: auto;
   padding-right: 16px;
-  scrollbar-color: rgba(147, 197, 253, 0.42) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
   scrollbar-width: thin;
 }
 
@@ -128,11 +128,11 @@
 
 .nb-stat-bars-list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(191, 219, 254, 0.55), rgba(96, 165, 250, 0.65));
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.65), rgba(203, 213, 225, 0.75));
 }
 
 .nb-stat-bars-list:hover::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(147, 197, 253, 0.9), rgba(59, 130, 246, 0.9));
+  background: linear-gradient(180deg, rgba(100, 116, 139, 0.75), rgba(52, 73, 94, 0.85));
 }
 
 .nb-stat-donut-card {
@@ -148,7 +148,7 @@
 
 .nb-stat-title {
   margin: 0 0 14px;
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .nb-stat-section-head {
@@ -164,25 +164,26 @@
 }
 
 .nb-stat-toggle-btn {
-  border: 1px solid #dbeafe;
+  border: 1px solid #e5e7eb;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #2563eb;
+  background: #ffffff;
+  color: #334155;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   padding: 5px 10px;
   white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .nb-stat-toggle-btn:hover {
-  background: #dbeafe;
+  background: #f3f4f6;
 }
 
 .nb-stat-collapsed-hint {
   margin-top: auto;
   padding-top: 8px;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -194,6 +195,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 4px;
+  font-size: 18px;
 }
 
 .nb-stat-track {
@@ -206,12 +208,12 @@
 .nb-stat-fill {
   height: 100%;
   border-radius: 8px;
-  background: linear-gradient(90deg, #2563eb, #6366f1);
+  background: linear-gradient(90deg, #34495e, #94a3b8);
 }
 
 .nb-stat-latest {
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 15px;
   margin-top: 4px;
 }
 
@@ -230,13 +232,13 @@
   height: 250px;
   border-radius: 50%;
   border: 3px solid #ffffff;
-  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
 }
 
 .nb-stat-donut-wrap > .nb-stat-donut {
   flex-shrink: 0;
   box-shadow:
-    0 10px 26px rgba(37, 99, 235, 0.2),
+    0 10px 26px rgba(15, 23, 42, 0.1),
     inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
@@ -245,7 +247,7 @@
   height: 152px;
   border-radius: 50%;
   margin: 46px;
-  background: #f4f5f7;
+  background: #f3f4f6;
 }
 
 .nb-stat-donut-legend-row {
@@ -282,19 +284,19 @@
 }
 
 .nb-stat-donut-card .dot.linked {
-  background: #2563eb;
+  background: #34495e;
 }
 
 .nb-stat-donut-card .dot.unlinked {
-  background: #bcc6d2;
+  background: #cbd5e1;
 }
 
 .nb-stat-donut-card .dot.multi {
-  background: #7fb0e5;
+  background: #94a3b8;
 }
 
 .nb-stat-donut-card .dot.fav {
-  background: #10b981;
+  background: #64748b;
 }
 
 .nb-stat-table {

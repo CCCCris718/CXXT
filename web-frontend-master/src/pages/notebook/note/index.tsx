@@ -32,6 +32,9 @@ import {
 } from './storage';
 import './index.less';
 
+// 笔记主界面：列表 + contenteditable 正文，数据走 notebook API，本地快照在 storage.ts（IndexedDB + 合并策略）。
+// 改富文本标签或清洗规则时，留意后端的 HTML 白名单，以及 normalizeBrowserBoldItalicToBackendTags 的兜底。
+
 const CATEGORY_NAV_COLLAPSE_MAX = 2;
 const NOTE_SETTINGS_KEY = 'notebook_note_settings_v1';
 const FONT_SIZE_SUGGESTIONS = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48];
@@ -1592,9 +1595,9 @@ const NotePage: React.FC = () => {
                 padding: 12,
                 lineHeight: 1.7,
                 outline: 'none',
-                border: '1px solid #dbeafe',
+                border: '1px solid #e8ded4',
                 borderRadius: 8,
-                background: '#fbfdff',
+                background: '#ffffff',
                 fontFamily: fontFamilyCssName(editorFontFamily),
                 fontSize: `${editorBaseFontPx}px`,
               }}

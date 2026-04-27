@@ -8,8 +8,7 @@ const Settings: LayoutSettings & {
   logo?: string;
 } = {
   navTheme: 'light',
-  // 拂晓蓝
-  colorPrimary: '#1890ff',
+  colorPrimary: '#34495e',
   layout: 'side',
   contentWidth: 'Fluid',
   fixedHeader: false,

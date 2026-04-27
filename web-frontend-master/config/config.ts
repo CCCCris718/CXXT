@@ -93,10 +93,32 @@ export default defineConfig({
   },
   /**
    * @name antd 插件
-   * @description 内置了 babel import 插件
+   * @description 靛青主色 + 锌灰中性 + 分层阴影，偏高端 SaaS 质感
    * @doc https://umijs.org/docs/max/antd#antd
    */
-  antd: {},
+  antd: {
+    theme: {
+      token: {
+        colorPrimary: '#34495e',
+        colorInfo: '#64748b',
+        colorSuccess: '#34495e',
+        colorWarning: '#d97706',
+        colorError: '#dc2626',
+        colorBgLayout: '#f8f9fa',
+        colorBgContainer: '#ffffff',
+        colorBorder: '#e2e8f0',
+        colorText: '#1e293b',
+        colorTextSecondary: '#64748b',
+        borderRadius: 12,
+        controlHeight: 40,
+        fontFamily: `ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif`,
+        boxShadow: '0 1px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -0.5px rgba(0, 0, 0, 0.06), 0 2px 8px -2px rgba(0, 0, 0, 0.04)',
+        boxShadowSecondary:
+          '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 12px 32px -6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03)',
+        wireframe: false,
+      },
+    },
+  },
   /**
    * @name 网络请求配置
    * @description 它基于 axios 和 ahooks 的 useRequest 提供了一套统一的网络请求和错误处理方案。
