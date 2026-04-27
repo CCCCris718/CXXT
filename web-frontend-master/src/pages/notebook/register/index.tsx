@@ -24,6 +24,7 @@ function getRegisterErrorMessage(err: unknown): string {
 }
 
 const Register: React.FC = () => {
+  // 注册页状态包含：账号密码输入、协议勾选与提示信息。
   const { initialState, setInitialState } = useModel('@@initialState');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +35,7 @@ const Register: React.FC = () => {
   const showMessage = (text: string, type: 'info' | 'error') => setMsg({ text, type });
 
   const fetchUserInfo = async (): Promise<API.Token | undefined> => {
+    // 注册后自动登录时复用全局用户信息拉取流程。
     const userInfo = await initialState?.fetchUserInfo?.();
     if (userInfo) {
       flushSync(() => {
@@ -52,6 +54,7 @@ const Register: React.FC = () => {
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const onRegister = async () => {
+    // 注册主流程：本地校验 -> 提交注册 -> 尝试自动登录。
     const user = username.trim();
     if (!user) {
       showMessage('请设置用户名', 'error');
@@ -95,6 +98,7 @@ const Register: React.FC = () => {
         return;
       }
       const tok = loginResult as API.Token;
+      // 显示名与登录页保持一致，优先使用服务端 userCode。
       setLoginDisplayName((tok.userCode && tok.userCode.trim()) || user);
       const userInfo = await fetchUserInfo();
       if (userInfo) {

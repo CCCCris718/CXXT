@@ -12,13 +12,20 @@ import {
   saveNotebookData,
 } from '../note/storage';
 
-// 最近编辑：按本地 save 历史拼时间线，diff 摘要用 splitSegments 按句切，纯前端展示。
+/**
+ * 最近编辑页职责：
+ * - 基于本地保存快照展示最近编辑轨迹；
+ * - 提供最近两次保存差异摘要与内容高亮；
+ * - 支持将笔记恢复到上一次保存版本。
+ */
 
 function sanitizeRichHtml(html: string) {
+  // 富文本预览前进行清洗，避免历史内容中的潜在不安全标签直接渲染。
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }
 
 function splitSegments(text: string) {
+  // 以“句段 + 换行标记”为最小粒度拆分，便于差异高亮展示。
   const lines = text.split('\n');
   const parts: string[] = [];
   lines.forEach((line, lineIndex) => {
@@ -38,6 +45,7 @@ type DiffTokenType = 'equal' | 'add' | 'remove';
 type DiffToken = { type: DiffTokenType; text: string };
 
 function buildDiffTokens(previousText: string, currentText: string): DiffToken[] {
+  // 使用 LCS 动态规划生成最小编辑可读序列（新增/删除/不变）。
   const a = splitSegments(previousText);
   const b = splitSegments(currentText);
   const n = a.length;
@@ -86,6 +94,7 @@ function getSaveDiffSummary(
   noteId: string,
   histories: ReturnType<typeof loadNoteSaveHistories>,
 ) {
+  // 归纳最近两次快照差异，用于面板摘要文案。
   const history = histories[noteId];
   if (!history) {
     return {
@@ -138,6 +147,7 @@ function getSaveDiffSummary(
 }
 
 function getEmptyDiffText(status: ReturnType<typeof getSaveDiffSummary>['status'] | undefined): string {
+  // 按状态返回可直接展示的“无差异原因”文本，避免空面板。
   if (status === 'none') return '暂无本地保存历史。请先在“笔记管理”中保存一次。';
   if (status === 'single') return '目前只有一次保存记录。再次修改并保存后，才会生成两次保存差异。';
   if (status === 'same') return '最近两次保存内容一致，暂无可展示差异。';
@@ -145,17 +155,20 @@ function getEmptyDiffText(status: ReturnType<typeof getSaveDiffSummary>['status'
 }
 
 const RecentPage: React.FC = () => {
+  // 首屏从本地缓存恢复，提升页面可用性与加载稳定性。
   const [data, setData] = useState(() => loadNotebookData());
   const [saveHistories, setSaveHistories] = useState(() => loadNoteSaveHistories());
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
+    // 页面挂载时同步一次本地缓存快照，避免跨页后数据显示滞后。
     setData(loadNotebookData());
     setSaveHistories(loadNoteSaveHistories());
   }, []);
 
   const recents = useMemo(() => {
+    // 最近编辑按“时间倒序 + 关键词过滤”生成。
     const kw = search.trim().toLowerCase();
     return data.notes
       .slice()
@@ -170,6 +183,7 @@ const RecentPage: React.FC = () => {
       : undefined;
 
   useEffect(() => {
+    // 列表数据可能不含 richContent，按需补拉详情以提升预览质量。
     if (!current) return;
     if (String(current.richContent || '').trim() !== '') return;
     const noteId = Number(current.id);
@@ -205,6 +219,7 @@ const RecentPage: React.FC = () => {
   const diff = current ? getSaveDiffSummary(current.id, saveHistories) : undefined;
   const canRestorePrevious = Boolean(current && saveHistories[current.id]?.previous);
   const diffTokens = useMemo(() => {
+    // 若不存在历史基线，则将当前正文作为“等价内容”直接展示。
     if (!current) return [] as DiffToken[];
     const history = saveHistories[current.id];
     if (!history?.previous) return [{ type: 'equal', text: current.content || '（暂无正文）' }];
@@ -212,6 +227,7 @@ const RecentPage: React.FC = () => {
   }, [current, saveHistories]);
 
   const handleRestorePrevious = () => {
+    // 恢复流程：先同步后端，再刷新本地缓存与历史快照。
     if (!current) {
       message.warning('请先选择一条笔记');
       return;
@@ -278,6 +294,7 @@ const RecentPage: React.FC = () => {
     });
   };
 
+  // 左侧中栏：最近编辑列表及搜索入口。
   const middle = (
     <>
       <div className="nb-ws-panel">

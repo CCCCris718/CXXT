@@ -20,17 +20,24 @@ import {
 } from '../note/storage';
 import './index.less';
 
-// 分类增删改、批量把笔记划到某类；关联篇数用 listNotebookNotes 拉一遍算，和笔记页 filter 逻辑别脱节。
+/**
+ * 分类管理页职责：
+ * - 维护分类的新增、编辑、删除；
+ * - 提供“批量加入分类 / 从分类移除”能力；
+ * - 与笔记页共享分类口径，避免统计与筛选结果不一致。
+ */
 
 type CategoryWithDescription = NotebookCategory & { description?: string };
 
 function toDisplayTime(time?: string) {
+  // 分类创建/更新时间统一展示；缺失值显示占位符。
   if (!time) return '—';
   const d = new Date(time);
   return Number.isNaN(d.getTime()) ? time : d.toLocaleString();
 }
 
 function getNextCategoryName(categories: NotebookCategory[]) {
+  // 生成不冲突的默认分类名，避免首次创建即触发重名校验。
   const baseName = '新分类';
   const usedNames = new Set(categories.map((c) => c.name.trim()));
   if (!usedNames.has(baseName)) return baseName;
@@ -43,6 +50,7 @@ function getNextCategoryName(categories: NotebookCategory[]) {
 }
 
 const CategoryPage: React.FC = () => {
+  // 页面状态以本地缓存为初始值，确保接口慢或离线时页面可先渲染。
   const [data, setData] = useState<NotebookData>(() => loadNotebookData());
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -56,6 +64,7 @@ const CategoryPage: React.FC = () => {
   const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
 
   const reloadNotebookData = React.useCallback(async () => {
+    // 单次并发拉取分类和笔记，减少串行请求延迟。
     try {
       const [categories, notePage] = await Promise.all([
         listNotebookCategories(),
@@ -87,6 +96,7 @@ const CategoryPage: React.FC = () => {
       setData(next);
       saveNotebookData(next);
     } catch {
+      // 拉取失败时保留本地缓存数据，避免页面进入空白状态。
       message.error('加载后端分类数据失败，已回退本地缓存');
     }
   }, []);
@@ -99,6 +109,7 @@ const CategoryPage: React.FC = () => {
     ((category as CategoryWithDescription | undefined)?.description || '').trim();
 
   const categories = useMemo(() => {
+    // 分类列表采用“先筛选后排序”策略，保证排序仅作用于可见集合。
     const kw = search.trim().toLowerCase();
     const filtered = data.categories.filter((c) => c.name.toLowerCase().includes(kw));
     return filtered.slice().sort((a, b) => {
@@ -121,6 +132,7 @@ const CategoryPage: React.FC = () => {
     [data.notes, selected],
   );
   const filteredNotesInSelected = useMemo(() => {
+    // 分类内二次筛选，仅在当前分类范围内做标题/正文匹配。
     const kw = noteFilter.trim().toLowerCase();
     if (!kw) return notesInSelected;
     return notesInSelected.filter(
@@ -136,6 +148,7 @@ const CategoryPage: React.FC = () => {
   }, [selected]);
 
   React.useEffect(() => {
+    // 当前选中分类失效时自动回退到首个可见分类。
     if (!categories.length) {
       setSelectedId(null);
       return;
@@ -146,6 +159,7 @@ const CategoryPage: React.FC = () => {
   }, [categories, selectedId]);
 
   const createCategory = async () => {
+    // 新建分类时优先生成可用默认名，避免出现重复命名。
     const trimmed = getNextCategoryName(data.categories);
     if (data.categories.some((c) => c.name === trimmed)) {
       message.warning('分类名称已存在');
@@ -182,6 +196,7 @@ const CategoryPage: React.FC = () => {
   };
 
   const saveCategory = async () => {
+    // 保存分类时仅提交名称；简介当前仅用于本地展示，不参与后端结构字段。
     if (!selected) return;
     const trimmed = editorName.trim();
     if (!trimmed) {
@@ -203,6 +218,7 @@ const CategoryPage: React.FC = () => {
   };
 
   const candidateNotes = useMemo(() => {
+    // “加入分类”弹窗候选列表按最近修改倒序，便于快速定位新笔记。
     const kw = noteSearch.trim().toLowerCase();
     return data.notes
       .filter((n) => {
@@ -214,6 +230,7 @@ const CategoryPage: React.FC = () => {
   }, [data.notes, noteSearch]);
 
   const addSelectedNotesToCategory = async () => {
+    // 批量加入分类采用“先本地计算增量，再并发提交更新”方式。
     if (!selected) return;
     if (!selectedNoteIds.length) {
       message.warning('请先选择笔记');
@@ -266,6 +283,7 @@ const CategoryPage: React.FC = () => {
   };
 
   const deleteCategory = () => {
+    // 删除分类不会删除笔记本体，仅解除该分类关联关系。
     if (!selected) {
       message.warning('请先选择分类');
       return;
@@ -290,6 +308,7 @@ const CategoryPage: React.FC = () => {
   };
 
   const removeNoteFromCategory = async (noteId: string) => {
+    // 单条移出分类沿用 updateNotebookNote，保证服务端关联关系一致更新。
     if (!selected) return;
     const note = data.notes.find((n) => n.id === noteId);
     const id = Number(noteId);
@@ -309,6 +328,7 @@ const CategoryPage: React.FC = () => {
     }
   };
 
+  // 左侧中栏内容：分类检索、列表项与基础操作入口。
   const middle = (
     <>
       <div className="nb-ws-panel nb-category-side-panel">

@@ -32,13 +32,16 @@ import {
 } from './storage';
 import './index.less';
 
-// 笔记主界面：列表 + contenteditable 正文，数据走 notebook API，本地快照在 storage.ts（IndexedDB + 合并策略）。
-// 改富文本标签或清洗规则时，留意后端的 HTML 白名单，以及 normalizeBrowserBoldItalicToBackendTags 的兜底。
+/**
+ * 笔记主页面：左侧为列表导航，右侧为富文本编辑区域。
+ * - 远端数据通过 notebook 相关接口获取与持久化；
+ * - 本地缓存由 storage 模块统一管理（localStorage）。
+ */
 
 const CATEGORY_NAV_COLLAPSE_MAX = 2;
 const NOTE_SETTINGS_KEY = 'notebook_note_settings_v1';
 const FONT_SIZE_SUGGESTIONS = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48];
-/** 正文可编辑区基础字号。勿与选区/工具栏的 editorFontSize 绑定，否则改选区会修改根节点 style，整篇未单独设字号的文字会跟着变 */
+/** 编辑器基础字号，仅影响默认展示，不与“选区字号”联动。 */
 const EDITOR_BASE_FONT_PX = 16;
 
 type FilterCat = 'all' | number;
@@ -66,6 +69,7 @@ const DEFAULT_SETTINGS: NoteSettings = {
 };
 
 function loadNoteSettings(): NoteSettings {
+  // 设置读取采取“默认值 + 增量覆盖”策略，保证历史版本字段缺失时可平滑兼容。
   try {
     const raw = localStorage.getItem(NOTE_SETTINGS_KEY);
     if (!raw) return DEFAULT_SETTINGS;
@@ -77,6 +81,7 @@ function loadNoteSettings(): NoteSettings {
 }
 
 function autoSaveIntervalToMs(interval: AutoSaveInterval): number | null {
+  // 自动保存仅在固定档位下生效，关闭时返回 null 以便上层直接短路。
   if (interval === '30s') return 30_000;
   if (interval === '1m') return 60_000;
   if (interval === '5m') return 300_000;
@@ -84,6 +89,7 @@ function autoSaveIntervalToMs(interval: AutoSaveInterval): number | null {
 }
 
 function summarizeText(content: string) {
+  // 本地兜底摘要：优先抽取首句，再控制最大展示长度。
   const parts = content
     .split(/[。！？\n]+/)
     .map((s) => s.trim())
@@ -97,12 +103,14 @@ function summarizeText(content: string) {
 }
 
 function toDisplayTime(time?: string) {
+  // 统一时间展示入口：非法时间字符串直接透传，避免展示空值。
   if (!time) return new Date().toLocaleString();
   const d = new Date(time);
   return Number.isNaN(d.getTime()) ? time : d.toLocaleString();
 }
 
 function escapeHtmlText(text: string) {
+  // 仅用于纯文本回退渲染，避免插入未转义字符导致结构污染。
   return text
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -112,6 +120,7 @@ function escapeHtmlText(text: string) {
 }
 
 function plainTextToFallbackHtml(plain: string) {
+  // 当 richContent 缺失时，将纯文本安全转换为段落结构。
   const normalized = plain.replaceAll('\r\n', '\n');
   if (!normalized.trim()) return '<p><br></p>';
   return normalized
@@ -124,6 +133,7 @@ function plainTextToFallbackHtml(plain: string) {
 }
 
 function sanitizeRichHtml(html: string) {
+  // 与后端清洗策略保持一致，前端仅保留安全 HTML 片段。
   return DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
   });
@@ -146,8 +156,8 @@ function fontFamilyForExec(f: EditorFontFamily) {
 }
 
 /**
- * execCommand('bold'|'italic') 在多数浏览器里会生成/切换 <b>、<i>，而后端白名单为 strong、em；保存前统一为后者。
- * 用节点搬运代替 innerHTML，避免破坏已有子节点与顺序。
+ * 浏览器 execCommand 常生成 <b>/<i> 标签，服务端标准为 <strong>/<em>。
+ * 这里逐节点替换，避免整段 innerHTML 重写导致选区与事件状态丢失。
  */
 function normalizeBrowserBoldItalicToBackendTags(root: HTMLElement) {
   if (typeof document === 'undefined') return;
@@ -181,7 +191,7 @@ function normalizeBrowserBoldItalicToBackendTags(root: HTMLElement) {
   });
 }
 
-/** 与工具栏高亮/撤销可用性一致的状态（随光标/选区在正文内变化） */
+/** 编辑器工具栏状态，始终依据当前选区实时计算。 */
 type ToolbarFormatState = {
   bold: boolean;
   italic: boolean;
@@ -204,7 +214,12 @@ const TOOLBAR_FORMAT_INITIAL: ToolbarFormatState = {
   canRedo: false,
 };
 
-// 下面一串小函数都是给工具栏用的：从 Selection 推断当前是否在编辑器里、块标签、h1/p、对齐方式等。
+/**
+ * 以下工具函数用于推导工具栏状态：
+ * - 选区是否位于编辑器内部；
+ * - 当前块级标签类型；
+ * - 行内样式与对齐方式。
+ */
 
 function selectionInEditorHost(editor: HTMLElement): boolean {
   if (typeof window === 'undefined') return false;
@@ -300,6 +315,7 @@ function alignFromBlock(
 }
 
 function computeToolbarFormatState(editor: HTMLDivElement | null): ToolbarFormatState {
+  // 无法访问 DOM 或编辑器未挂载时，返回默认态以避免 UI 误导。
   if (typeof document === 'undefined' || !editor) {
     return { ...TOOLBAR_FORMAT_INITIAL, canUndo: false, canRedo: false };
   }
@@ -388,13 +404,20 @@ function computeToolbarFormatState(editor: HTMLDivElement | null): ToolbarFormat
   };
 }
 
-// 状态机概览：currentNoteId、editorHtml、categories/notes 来自接口；定时自动保存读 settings.autoSaveInterval；关标签页前会 flush。
+/**
+ * NotePage 负责：
+ * - 笔记列表与当前编辑项状态管理；
+ * - 编辑器内容同步与格式工具栏联动；
+ * - 自动保存与后端数据刷新。
+ */
 
 const NotePage: React.FC = () => {
+  /** 全局登录态与路由上下文。 */
   const { initialState, setInitialState } = useModel('@@initialState');
   const location = useLocation();
   const currentToken = initialState?.currentToken;
 
+  /** 页面核心业务状态：列表、筛选、选中项与界面开关。 */
   const [data, setData] = useState<NotebookData>(() => loadNotebookData());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState<FilterCat>('all');
@@ -413,6 +436,7 @@ const NotePage: React.FC = () => {
   const [editorFontFamily, setEditorFontFamily] = useState<EditorFontFamily>('yahei');
   const [editorFontSize, setEditorFontSize] = useState(16);
   const [toolbarFormat, setToolbarFormat] = useState<ToolbarFormatState>(TOOLBAR_FORMAT_INITIAL);
+  /** 编辑器相关引用：用于持有 DOM、脏标记和定时器句柄。 */
   const editorRef = useRef<HTMLDivElement | null>(null);
   const editorDirtyRef = useRef(false);
   const lastLoadedNoteIdRef = useRef<string | null>(null);
@@ -425,6 +449,7 @@ const NotePage: React.FC = () => {
     settings.fontScale === 'small' ? 14 : settings.fontScale === 'large' ? 18 : EDITOR_BASE_FONT_PX;
 
   const scheduleToolbarFormatRefresh = useCallback(() => {
+    // 使用 RAF 合并高频事件，降低 selectionchange 带来的重复计算开销。
     if (typeof window === 'undefined') return;
     if (toolbarRafRef.current !== null) {
       window.cancelAnimationFrame(toolbarRafRef.current);
@@ -436,6 +461,7 @@ const NotePage: React.FC = () => {
   }, []);
 
   const reloadNotebookData = useCallback(async () => {
+    // 通过 requestId 只保留最新请求结果，避免慢请求覆盖新状态。
     const requestId = reloadRequestIdRef.current + 1;
     reloadRequestIdRef.current = requestId;
     try {
@@ -443,13 +469,13 @@ const NotePage: React.FC = () => {
         listNotebookCategories(),
         listNotebookNotes({ current: 1, pageSize: 500 }),
       ]);
-      // 仅允许最后一次请求更新状态，避免慢请求覆盖新数据
       if (requestId !== reloadRequestIdRef.current) {
         return;
       }
-      // 列表接口不返回富文本（见后端 buildNoteVOs(..., false)）。
-      // 另外：有富文本时后端 content 来自 sanitize 后的 plainText()，与前端 innerText.trim() 可能不一致，
-      // 若用「正文相同才保留 rich」会匹配失败，保存后 rich 被清空、编辑器按纯文本重绘。
+      /**
+       * 列表接口不稳定返回 richContent，需与本地缓存做合并。
+       * 同时，后端 plainText 与前端 innerText 存在实现差异，不能用“正文相同”作为 rich 保留条件。
+       */
       setData((prev) => {
         const prevById = new Map(prev.notes.map((n) => [n.id, n]));
         const nextData: NotebookData = {
@@ -487,10 +513,12 @@ const NotePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // 初次进入页面时拉取一次远端数据，并与本地缓存合并。
     void reloadNotebookData();
   }, [reloadNotebookData]);
 
   useEffect(() => {
+    // 监听全局选区变更，驱动工具栏状态更新。
     if (typeof document === 'undefined') return;
     const onSel = () => {
       scheduleToolbarFormatRefresh();
@@ -506,14 +534,17 @@ const NotePage: React.FC = () => {
   }, [scheduleToolbarFormatRefresh]);
 
   useEffect(() => {
+    // 任意数据变更后写回本地缓存，保证刷新后可恢复。
     saveNotebookData(data);
   }, [data]);
 
   useEffect(() => {
+    // 设置项单独持久化，避免与业务数据互相覆盖。
     localStorage.setItem(NOTE_SETTINGS_KEY, JSON.stringify(settings));
   }, [settings]);
 
   useEffect(() => {
+    // 支持通过 URL 参数执行一次性动作（如打开设置、指定分类），处理后清理参数。
     const params = new URLSearchParams(location.search);
     let dirty = false;
     if (params.get('openSettings') === '1') {
@@ -537,6 +568,7 @@ const NotePage: React.FC = () => {
   }, [location.search, data.categories]);
 
   const filteredNotes = useMemo(() => {
+    // 按“分类 -> 关键词 -> 排序”顺序处理，确保筛选逻辑可预测。
     let list = data.notes;
     if (filterCat !== 'all') {
       list = list.filter((n) => n.categoryIds.includes(filterCat));
@@ -558,6 +590,7 @@ const NotePage: React.FC = () => {
   }, [data.notes, filterCat, search, settings.defaultSort]);
 
   useEffect(() => {
+    // 保证选中项与过滤结果一致，不存在时自动回退到首条可见笔记。
     const params = new URLSearchParams(location.search);
     const noteParam = params.get('note');
 
@@ -596,6 +629,7 @@ const NotePage: React.FC = () => {
   );
 
   useEffect(() => {
+    // 切换当前笔记后刷新工具栏状态，防止沿用上一个笔记的选区态。
     if (!currentNote) {
       setToolbarFormat(TOOLBAR_FORMAT_INITIAL);
       return;
@@ -604,6 +638,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, scheduleToolbarFormatRefresh]);
 
   const patchNote = useCallback((id: string, patch: Partial<NotebookNote>) => {
+    // 统一的单条笔记补丁入口，减少重复 map 逻辑。
     setData((d) => ({
       ...d,
       notes: d.notes.map((n) => (n.id === id ? { ...n, ...patch } : n)),
@@ -611,8 +646,8 @@ const NotePage: React.FC = () => {
   }, []);
 
   /**
-   * 列表接口不带富文本；刷新或清缓存后 state 里可能没有 richContent，但库里可能有。
-   * 对当前选中的、已有服务端 id 且本地缺 rich 的笔记，拉一次详情以恢复格式显示。
+   * 列表接口通常不返回富文本内容。
+   * 当本地 richContent 缺失时，按需补拉单条详情，避免编辑器退化为纯文本模式。
    */
   useEffect(() => {
     if (!selectedId || !currentNote) return;
@@ -639,7 +674,7 @@ const NotePage: React.FC = () => {
           });
         }
       } catch {
-        // 忽略：离线或权限失败时仍显示纯文本
+        // 详情拉取失败时保持纯文本可用，避免阻断主流程。
       }
     })();
     return () => {
@@ -648,6 +683,7 @@ const NotePage: React.FC = () => {
   }, [selectedId, currentNote, patchNote]);
 
   const showStatus = useCallback((text: string) => {
+    // 轻量状态提示：统一展示并自动清空，减少重复 message 弹窗。
     if (statusClearTimerRef.current !== null) {
       clearTimeout(statusClearTimerRef.current);
       statusClearTimerRef.current = null;
@@ -677,6 +713,7 @@ const NotePage: React.FC = () => {
   }, []);
 
   const readEditorSnapshot = useCallback(() => {
+    // 统一读取编辑器快照，确保 plain/rich 来源一致。
     const el = editorRef.current;
     if (!el) {
       return { plain: '', rich: '' };
@@ -688,6 +725,7 @@ const NotePage: React.FC = () => {
   }, []);
 
   const commitEditorToState = useCallback(() => {
+    // 仅在内容变更时写入状态，避免无意义 setState。
     if (!currentNote) return;
     const { plain, rich } = readEditorSnapshot();
     editorDirtyRef.current = true;
@@ -698,6 +736,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, patchNote, readEditorSnapshot]);
 
   const runExec = useCallback((command: string, value?: string) => {
+    // 对 execCommand 做统一封装，便于集中处理选区和工具栏同步。
     editorRef.current?.focus();
     if (typeof document === 'undefined') return;
     try {
@@ -712,6 +751,7 @@ const NotePage: React.FC = () => {
   const activeRichContent = currentNote?.richContent;
 
   useLayoutEffect(() => {
+    // 受控回填：仅在未编辑脏态时才将状态写回 DOM，避免覆盖用户输入。
     if (!selectedId) {
       if (editorRef.current) {
         editorRef.current.innerHTML = '';
@@ -745,16 +785,18 @@ const NotePage: React.FC = () => {
   }, [selectedId, activeRichContent]);
 
   useLayoutEffect(() => {
+    // DOM 回填后刷新工具栏，确保高亮状态与当前选区一致。
     scheduleToolbarFormatRefresh();
   }, [selectedId, activeRichContent, scheduleToolbarFormatRefresh]);
 
   const handleEditorInput = useCallback(() => {
+    // 输入时只标记脏态，不立即落库；保存交由手动/自动保存流程处理。
     if (!currentNote) return;
     editorDirtyRef.current = true;
     scheduleToolbarFormatRefresh();
   }, [currentNote, scheduleToolbarFormatRefresh]);
 
-  /** 粘贴仅插入纯文本，避免从网页/Word 带入背景色等无法编辑的样式 */
+  /** 粘贴统一降级为纯文本，避免引入网页或 Office 的冗余样式。 */
   const handleEditorPaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       if (!currentNote) return;
@@ -796,7 +838,10 @@ const NotePage: React.FC = () => {
     [currentNote, scheduleToolbarFormatRefresh],
   );
 
-  /** 加粗/斜体/下划线使用浏览器原生命令，支持再次点击取消；再把 b/i 规范为 strong/em 以符合后端与现有逻辑 */
+  /**
+   * 行内格式（加粗/斜体/下划线）使用原生命令执行。
+   * 执行后补做标签规范化，保证保存结构与后端约定一致。
+   */
   const applyInlineFormat = useCallback(
     (mode: 'bold' | 'italic' | 'underline') => {
       if (!currentNote) return;
@@ -825,6 +870,7 @@ const NotePage: React.FC = () => {
 
   const applyLineStyle = useCallback(
     (mode: 'heading' | 'paragraph') => {
+      // 块级样式统一映射到 formatBlock，避免与行内样式冲突。
       if (!currentNote) return;
       if (mode === 'heading') {
         runExec('formatBlock', '<h1>');
@@ -837,6 +883,7 @@ const NotePage: React.FC = () => {
 
   const applyTextAlign = useCallback(
     (align: TextAlignMode) => {
+      // 对齐命令使用显式映射，便于维护和审计。
       if (!currentNote) return;
       const map: Record<TextAlignMode, string> = {
         left: 'justifyLeft',
@@ -850,6 +897,7 @@ const NotePage: React.FC = () => {
 
   const applyFontSizeToSelection = useCallback(
     (size: number) => {
+      // 兼容策略：先触发浏览器字号命令，再替换为 px 内联样式。
       if (!currentNote) return;
       runExec('fontSize', '7');
       const el = editorRef.current;
@@ -886,6 +934,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, runExec]);
 
   const getEditorContentOrWarn = useCallback(() => {
+    // AI 功能统一读取正文并执行空值校验。
     if (!currentNote) {
       showStatus('请先选择或新建一条笔记');
       return null;
@@ -900,6 +949,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, readEditorSnapshot, showStatus]);
 
   const performSave = useCallback(async (silent: boolean) => {
+    // 保存前统一做标题/正文校验，避免产生空内容笔记。
     if (!currentNote) return;
     const title = currentNote.title.trim();
     const { plain, rich } = readEditorSnapshot();
@@ -923,6 +973,7 @@ const NotePage: React.FC = () => {
     try {
       const noteId = Number(currentNote.id);
       if (Number.isInteger(noteId)) {
+        // 已存在笔记走更新接口。
         await updateNotebookNote({
           id: noteId,
           title,
@@ -932,6 +983,7 @@ const NotePage: React.FC = () => {
           favorite: currentNote.favorite,
         });
       } else {
+        // 本地临时项在服务端落库时走创建接口。
         await addNotebookNote({
           title,
           content,
@@ -964,6 +1016,7 @@ const NotePage: React.FC = () => {
   }, [performSave]);
 
   useEffect(() => {
+    // 自动保存在“有选中笔记 + 已开启间隔 + 当前内容已变更”三条件下生效。
     if (typeof window === 'undefined') return undefined;
     if (autoSaveTimerRef.current !== null) {
       window.clearInterval(autoSaveTimerRef.current);
@@ -991,6 +1044,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, performSave, settings.autoSaveInterval]);
 
   const handleDelete = useCallback(() => {
+    // 删除属于高风险操作，必须经由确认弹窗触发。
     if (!currentNote) {
       showStatus('当前没有可删除的笔记');
       return;
@@ -1023,6 +1077,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, reloadNotebookData, showStatus]);
 
   const handleCreate = useCallback(async () => {
+    // 新建笔记默认继承“当前筛选分类”或“系统默认分类”。
     const defaultCat =
       settings.defaultCategoryId.trim() === '' ? null : Number(settings.defaultCategoryId);
     const cat: number | null = filterCat === 'all' ? defaultCat : filterCat;
@@ -1044,6 +1099,7 @@ const NotePage: React.FC = () => {
   }, [filterCat, reloadNotebookData, settings.defaultCategoryId, showStatus]);
 
   const handleSummarize = useCallback(async () => {
+    // 摘要优先走服务端接口，失败时回退本地摘要算法。
     const content = getEditorContentOrWarn();
     if (!content) return;
     setAiActionLoading(true);
@@ -1060,6 +1116,7 @@ const NotePage: React.FC = () => {
   }, [currentNote?.id, getEditorContentOrWarn, showAiResultModal]);
 
   const handleTranslate = useCallback(async () => {
+    // 翻译失败时展示原文片段，避免反馈中断。
     const content = getEditorContentOrWarn();
     if (!content) return;
     setAiActionLoading(true);
@@ -1077,6 +1134,7 @@ const NotePage: React.FC = () => {
   }, [currentNote?.id, getEditorContentOrWarn, showAiResultModal]);
 
   const handleToggleFavorite = useCallback(async () => {
+    // 已落库笔记同步后端；本地临时笔记仅更新前端状态。
     if (!currentNote) {
       showStatus('请先选择一条笔记');
       return;
@@ -1101,6 +1159,7 @@ const NotePage: React.FC = () => {
   }, [currentNote, patchNote, reloadNotebookData, showStatus]);
 
   const handleLogout = useCallback(async () => {
+    // 退出流程：清理会话态并跳转登录页。
     await logout();
     clearLoginDisplayName();
     setInitialState((s) => ({ ...s, currentToken: undefined }));
@@ -1119,6 +1178,7 @@ const NotePage: React.FC = () => {
   }, [handleLogout]);
 
   const handleClearLocalData = useCallback(() => {
+    // 仅清理本地缓存，不删除服务端数据。
     Modal.confirm({
       title: '清除本地笔记数据',
       content: '将删除浏览器中保存的全部分类与笔记，且无法恢复。是否继续？',
@@ -1149,6 +1209,7 @@ const NotePage: React.FC = () => {
   return (
     <div className={`nb-note-page nb-theme-${settings.theme} nb-setting-font-${settings.fontScale}`}>
       <div className={`nb-note-app${listCollapsed ? ' list-collapsed' : ''}`}>
+        {/* 左侧导航区：用户信息、页面跳转与系统操作入口。 */}
         <aside className="sidebar">
           <div className="logo">我的笔记</div>
           <div className="user-card">
@@ -1235,6 +1296,7 @@ const NotePage: React.FC = () => {
           </div>
         </aside>
 
+        {/* 中部列表区：搜索、分类筛选与笔记卡片列表。 */}
         <div className="list-area">
           <section
             className="notes-panel"
@@ -1334,6 +1396,7 @@ const NotePage: React.FC = () => {
               ))}
             </div>
           </section>
+          {/* 列表显隐切换按钮，用于聚焦右侧编辑区域。 */}
           <div className="list-toggle-shell">
             <button
               type="button"
@@ -1374,6 +1437,7 @@ const NotePage: React.FC = () => {
           </div>
         </div>
 
+        {/* 右侧正文区：标题、工具栏、编辑器与保存状态。 */}
         <main className="content-panel">
           <div className="topbar">
             <div className="title-group">
@@ -1415,6 +1479,7 @@ const NotePage: React.FC = () => {
 
           {currentNote ? (
             <div className="editor">
+              {/* 标题输入框：仅更新本地状态，保存由显式动作触发。 */}
               <input
                 className="editor-title"
                 value={currentNote.title}
@@ -1424,6 +1489,7 @@ const NotePage: React.FC = () => {
               <div className="editor-meta">
                 {`最近修改：${currentNote.time} · 分类：${categoryNamesByIds(data.categories, currentNote.categoryIds)}${currentNote.favorite ? ' · 已收藏' : ''}`}
               </div>
+            {/* 富文本工具栏：命令统一经由封装函数执行。 */}
             <div className="editor-toolbar" aria-label="编辑工具栏">
               <button
                 type="button"
@@ -1578,6 +1644,7 @@ const NotePage: React.FC = () => {
                 右对齐
               </button>
             </div>
+            {/* contentEditable 编辑区：负责输入、粘贴与失焦同步。 */}
             <div
               ref={editorRef}
               className="nb-rich-editor"

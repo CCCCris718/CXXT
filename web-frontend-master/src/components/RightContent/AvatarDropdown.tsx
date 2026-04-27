@@ -62,16 +62,16 @@ const AvatarLogo = () => {
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   /**
-   * 退出登录，并且将当前的 url 保存
+   * 退出登录并保留当前地址，用于登录后回跳。
    */
   const loginOut = async () => {
     await logout();
     clearLoginDisplayName();
     const { search, pathname } = window.location;
     const urlParams = new URL(window.location.href).searchParams;
-    /** 此方法会跳转到 redirect 参数所在的位置 */
+    /** redirect 参数存在时，由登录页统一处理回跳。 */
     const redirect = urlParams.get('redirect');
-    // Note: There may be security issues, please note
+    // 非登录页且无 redirect 时，主动拼接 redirect 参数。
     if (window.location.pathname !== APP_LOGIN_PATH && window.location.pathname !== PRO_LOGIN_PATH && !redirect) {
       history.replace({
         pathname: APP_LOGIN_PATH,
@@ -102,6 +102,7 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     (event: MenuInfo) => {
       const { key } = event;
       if (key === 'logout') {
+        // 先清空本地会话态，再执行登出流程。
         flushSync(() => {
           setInitialState((s) => ({ ...s, currentUser: undefined }));
         });

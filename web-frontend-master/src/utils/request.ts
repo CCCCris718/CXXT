@@ -18,12 +18,13 @@ export async function request<T>(
   url: string,
   options: any = { method: 'GET' },
 ): Promise<T | undefined> {
-  // 自定义开关勿传给 umi/axios，避免被透传为未知 config
+  // 自定义开关勿传给 umi/axios，避免污染底层配置。
   const throwError = Boolean(options['throwError']);
   const umiOpts = { ...options };
   delete umiOpts.throwError;
 
   if (!throwError) {
+    // 非抛错模式：异常返回 undefined，交由业务层决定兜底逻辑。
     try {
       const resp: any = await umiRequest(url, umiOpts);
       return unwrapServiceResponse<T>(resp);
@@ -36,6 +37,7 @@ export async function request<T>(
 }
 
 export function convertPageData(result: any) {
+  // 将后端分页结构适配为 ProTable 标准格式。
   return {
     data: result?.list || [],
     total: result?.total || 0,
@@ -43,6 +45,7 @@ export function convertPageData(result: any) {
   };
 }
 export function orderBy(sort: any) {
+  // 将排序对象转换为“字段 空格 方向”的后端可读字符串。
   if (!sort) return;
   const keys = Object.keys(sort);
   if (keys.length !== 1) return;
@@ -50,6 +53,7 @@ export function orderBy(sort: any) {
 }
 
 export async function waitTime(time: number = 100) {
+  // 简单延时工具，常用于演示与异步节流测试。
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);

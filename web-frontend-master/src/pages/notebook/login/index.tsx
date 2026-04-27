@@ -6,6 +6,7 @@ import { setLoginDisplayName } from '@/utils/displayUserName';
 import '../auth.less';
 
 function mapAuthOrOriginal(m: string): string {
+  // 将后端认证失败文案统一映射为前端规范提示。
   if (/invalid username or password/i.test(m) || m.includes('用户名或密码') || m.includes('密码错误')) {
     return '用户名或密码错误，若未注册请先注册。';
   }
@@ -48,6 +49,7 @@ function getLoginErrorMessage(err: unknown): string {
 }
 
 const Login: React.FC = () => {
+  // 登录页仅维护最小表单状态，用户信息由全局 initialState 承载。
   const { initialState, setInitialState } = useModel('@@initialState');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -68,6 +70,7 @@ const Login: React.FC = () => {
   }, []);
 
   const fetchUserInfo = async (): Promise<API.Token | undefined> => {
+    // 复用全局获取用户信息逻辑，保证会话态更新路径一致。
     const userInfo = await initialState?.fetchUserInfo?.();
     if (userInfo) {
       flushSync(() => {
@@ -82,6 +85,7 @@ const Login: React.FC = () => {
   };
 
   const onLogin = async () => {
+    // 登录主流程：前端校验 -> 认证接口 -> 全局状态写入 -> 页面跳转。
     const user = username.trim();
     const pass = password.trim();
     if (!user) {
@@ -120,6 +124,7 @@ const Login: React.FC = () => {
         return;
       }
       const tok = res as API.Token;
+      // 展示名优先使用服务端返回 userCode，其次回退输入用户名。
       setLoginDisplayName((tok.userCode && tok.userCode.trim()) || user);
       const userInfo = await fetchUserInfo();
       if (userInfo) {

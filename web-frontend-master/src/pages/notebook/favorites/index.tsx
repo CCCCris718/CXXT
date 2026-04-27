@@ -17,13 +17,20 @@ import {
   type NotebookData,
 } from '../note/storage';
 
-// 收藏列表：接口 favorite 字段可能是 0/1，展示前用 mergeNoteFavorite 和 storage 对齐。
+/**
+ * 收藏页职责：
+ * - 展示当前用户收藏笔记；
+ * - 支持按关键词筛选与取消收藏；
+ * - 与本地缓存保持同步，保证跨页状态一致。
+ */
 
 function sanitizeRichHtml(html: string) {
+  // 富文本预览前进行清洗，避免直接渲染不可信标签。
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
 }
 
 const FavoritesPage: React.FC = () => {
+  // 先加载本地缓存，随后以远端数据进行覆盖更新。
   const [data, setData] = useState<NotebookData>(() => loadNotebookData());
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -31,6 +38,7 @@ const FavoritesPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     const reloadData = async () => {
+      // 采用“本地先展示 + 远端再校准”的加载策略。
       const localData = loadNotebookData();
       setData(localData);
       try {
@@ -65,7 +73,7 @@ const FavoritesPage: React.FC = () => {
         setData(nextData);
         saveNotebookData(nextData);
       } catch {
-        // keep local fallback
+        // 远端失败时保留本地数据，页面仍可正常使用。
       }
     };
     void reloadData();
@@ -75,6 +83,7 @@ const FavoritesPage: React.FC = () => {
   }, []);
 
   const favoriteNotes = useMemo(() => {
+    // 收藏列表按最近更新时间倒序，便于优先查看最新内容。
     const kw = search.trim().toLowerCase();
     return data.notes
       .filter((n) => n.favorite)
@@ -89,6 +98,7 @@ const FavoritesPage: React.FC = () => {
       : undefined;
 
   useEffect(() => {
+    // 当列表项缺少 richContent 时按需拉取详情补全预览。
     if (!current) return;
     if (String(current.richContent || '').trim() !== '') return;
     const noteId = Number(current.id);
@@ -122,6 +132,7 @@ const FavoritesPage: React.FC = () => {
   }, [current]);
 
   const cancelFavorite = async (id: string) => {
+    // 取消收藏后同步更新本地缓存，保持各页面状态一致。
     const noteId = Number(id);
     try {
       if (Number.isInteger(noteId)) {
@@ -142,6 +153,7 @@ const FavoritesPage: React.FC = () => {
     }
   };
 
+  // 左侧中栏：收藏列表与搜索入口。
   const middle = (
     <>
       <div className="nb-ws-panel">

@@ -56,7 +56,7 @@ export async function getInitialState(): Promise<{
   };
 }
 
-// ProLayout 支持的api https://procomponents.ant.design/components/layout
+/** ProLayout 运行时配置入口。 */
 export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
     token: {
@@ -86,6 +86,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     rightContentRender: () => <RightContent />,
     footerRender: false,
     onPageChange: () => {
+      // 路由切换时做轻量鉴权：非白名单页面必须具备 currentToken。
       const { location } = history;
       if (!initialState?.currentToken && !isPublicPath(location.pathname)) {
         history.push(loginPath);
@@ -93,9 +94,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     },
     links: [],
     menuHeaderRender: undefined,
-    // 自定义 403 页面
-    // unAccessible: <div>unAccessible</div>,
-    // 增加一个 loading 的状态
+    // 如需自定义 403 / loading，可在此扩展 ProLayout 配置。
     childrenRender: (children) => children,
     ...initialState?.settings,
   };

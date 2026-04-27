@@ -62,6 +62,7 @@ const Login: React.FC = () => {
   const intl = useIntl();
 
   const fetchUserInfo = async () => {
+    // 管理端登录后复用全局用户信息拉取逻辑。
     const userInfo = await initialState?.fetchUserInfo?.();
     if (userInfo) {
       flushSync(() => {
@@ -75,7 +76,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      // 登录
+      // 登录主流程：认证 -> 会话同步 -> 跳转目标页。
       const msg = await adminLogin({ userId: values.username!, password: values.password! });
       if (!msg) {
         message.error(
@@ -102,6 +103,7 @@ const Login: React.FC = () => {
         defaultMessage: '登录成功！',
       });
       message.success(defaultLoginSuccessMessage);
+      // 管理端同样记录登录名，保证右上角及侧栏展示一致。
       setLoginDisplayName(String(values.username).trim());
       await fetchUserInfo();
       const urlParams = new URL(window.location.href).searchParams;

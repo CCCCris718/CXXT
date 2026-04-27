@@ -4,14 +4,21 @@ import NotebookWorkspace from '../components/NotebookWorkspace';
 import { loadNotebookData, mergeNoteFavorite, type NotebookData, type NotebookNote } from '../note/storage';
 import './index.less';
 
-// 统计页只做展示：按 7/30/全部 时间窗聚合，字数用纯文本粗算；收藏态仍走 mergeNoteFavorite，和列表一致。
+/**
+ * 统计页职责：
+ * - 仅进行展示层聚合与可视化，不改写业务数据；
+ * - 支持 7 天、30 天、全部时间窗口；
+ * - 关键口径（如收藏态）与笔记列表页保持一致。
+ */
 
 function toTime(t: string): number {
+  // 统一时间解析，非法字符串回退 0，避免 NaN 参与后续比较。
   const x = Date.parse(t);
   return Number.isNaN(x) ? 0 : x;
 }
 
 function toDisplayTime(time?: string): string {
+  // 统一展示时间格式，缺失值显示占位符。
   if (!time) return '—';
   const d = new Date(time);
   return Number.isNaN(d.getTime()) ? time : d.toLocaleString();
@@ -23,12 +30,14 @@ type StatisticsData = Omit<NotebookData, 'notes'> & { notes: StatisticsNote[] };
 const CATEGORY_PREVIEW_LIMIT = 5;
 
 function formatDelta(delta: number): string {
+  // KPI 环比文案格式化。
   if (delta > 0) return `较上期 +${delta}`;
   if (delta < 0) return `较上期 ${delta}`;
   return '较上期 持平';
 }
 
 const StatisticsPage: React.FC = () => {
+  // 首屏采用本地缓存初始化，远端数据到达后再覆盖。
   const [data, setData] = useState<StatisticsData>(() => loadNotebookData());
   const [windowDays, setWindowDays] = useState<StatisticsWindow>(7);
   const [barsExpanded, setBarsExpanded] = useState(false);
@@ -36,6 +45,7 @@ const StatisticsPage: React.FC = () => {
   const [animProgress, setAnimProgress] = useState(0);
 
   const reloadData = async () => {
+    // 并发拉取分类与笔记，减少统计刷新等待时间。
     try {
       const [categories, notes] = await Promise.all([
         listNotebookCategories(),
@@ -60,11 +70,12 @@ const StatisticsPage: React.FC = () => {
         })),
       });
     } catch {
-      // keep local fallback
+      // 远端不可用时保留本地兜底数据，不中断统计查看。
     }
   };
 
   useEffect(() => {
+    // 页面进入时主动拉取一次最新统计源数据。
     void reloadData();
   }, []);
 
@@ -72,6 +83,7 @@ const StatisticsPage: React.FC = () => {
   const windowMs = windowDays === 'all' ? null : windowDays * 24 * 3600 * 1000;
   const inWindow = (time: string) => windowMs === null || now - toTime(time) <= windowMs;
   const inPreviousWindow = (time: string) => {
+    // 上期窗口仅用于非“全部”模式的环比指标计算。
     if (windowMs === null) return false;
     const age = now - toTime(time);
     return age > windowMs && age <= windowMs * 2;
@@ -80,6 +92,7 @@ const StatisticsPage: React.FC = () => {
   const notesInPreviousWindow = data.notes.filter((n) => inPreviousWindow(n.time));
 
   const byCategory = data.categories.map((c) => {
+    // 分类统计结果：范围内笔记数 + 最近更新时间。
     const notes = notesInWindow.filter((n) => n.categoryIds.includes(c.id));
     const latestNote = notes.length ? notes.slice().sort((a, b) => toTime(b.time) - toTime(a.time))[0] : undefined;
     const latest = latestNote?.time || toDisplayTime(c.updatedAt || c.createdAt);
@@ -104,6 +117,7 @@ const StatisticsPage: React.FC = () => {
   const multiClassifiedCount = notesInWindow.filter((n) => n.categoryIds.length > 1).length;
 
   useEffect(() => {
+    // 切换窗口或数据源时重启动画，保证图表过渡一致。
     let raf = 0;
     const start = performance.now();
     const duration = 720;
@@ -121,6 +135,7 @@ const StatisticsPage: React.FC = () => {
   }, [data, windowDays]);
 
   const animated = useMemo(
+    // 对核心 KPI 进行数值补间，避免界面跳变。
     () => ({
       notesInWindow: Math.round(notesInWindow.length * animProgress),
       categoriesInWindow: Math.round(categoriesInWindowCount * animProgress),
@@ -131,6 +146,7 @@ const StatisticsPage: React.FC = () => {
   );
 
   const donutStyle = {
+    // 环图以 conic-gradient 绘制，角度按当前动画进度计算。
     background: `conic-gradient(
       #34495e 0deg ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,
       #94a3b8 ${(singleClassifiedCount / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg ${((singleClassifiedCount + multiClassifiedCount) / Math.max(notesInWindow.length, 1)) * 360 * animProgress}deg,

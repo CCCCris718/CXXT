@@ -7,6 +7,7 @@ const LAST_LOGIN_KEY = 'notebook_last_login_key';
 const NOTEBOOK_ACCOUNT = 'NOTEBOOK_USER';
 
 function pickFromToken(token?: API.Token | null): string | undefined {
+  // 兼容不同后端字段命名，按优先级提取可展示用户名。
   if (!token || typeof token !== 'object') return undefined;
   const o = token as Record<string, unknown>;
   const keys = ['userName', 'name', 'loginName', 'account'] as const;
@@ -54,6 +55,7 @@ export function setLoginDisplayName(name: string) {
 }
 
 export function clearLoginDisplayName() {
+  // 退出登录时清理“最近登录账号”痕迹，避免错误复用。
   try {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -66,6 +68,7 @@ export function clearLoginDisplayName() {
 
 /** 侧栏主标题：优先本地 profile，其次 Token 字段，再退回到登录名 */
 export function getDisplayUserName(token?: API.Token | null): string {
+  // 展示名优先级：本地 profile -> token 字段 -> 最近登录键。
   if (!token) return '';
   const loginKey = getNotebookLoginKey(token);
   if (!loginKey) return '';
@@ -77,6 +80,7 @@ export function getDisplayUserName(token?: API.Token | null): string {
 
 /** 侧栏副文案 */
 export function getSidebarSubtitle(token?: API.Token | null): string {
+  // 侧栏副标题统一展示“用户名：xxx”格式。
   if (!token) return '';
   const loginKey = getNotebookLoginKey(token);
   if (!loginKey) return '';

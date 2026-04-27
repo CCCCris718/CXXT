@@ -28,6 +28,7 @@ function getNotebookApiErrorMessage(err: unknown, fallback: string): string {
 }
 
 function msUntilNextIdChange(t?: API.Token): number {
+  // 用户名 30 天冷却：计算距离下一次可修改的剩余毫秒数。
   if (!t?.notebookIdLastChangedAt) return 0;
   const last = new Date(t.notebookIdLastChangedAt).getTime();
   if (Number.isNaN(last)) return 0;
@@ -35,6 +36,7 @@ function msUntilNextIdChange(t?: API.Token): number {
 }
 
 const ProfilePage: React.FC = () => {
+  // 当前用户身份信息均以 token 为准，避免本地字段漂移。
   const { initialState, setInitialState } = useModel('@@initialState');
   const token = initialState?.currentToken;
   const loginKey = useMemo(() => (token ? getNotebookLoginKey(token) : ''), [token]);
@@ -62,12 +64,14 @@ const ProfilePage: React.FC = () => {
   const [pwdSubmitting, setPwdSubmitting] = useState(false);
 
   useEffect(() => {
+    // 未登录或标识缺失时强制回到登录页，避免进入受保护页面。
     if (!token || !loginKey) {
       history.replace(APP_LOGIN_PATH);
     }
   }, [token, loginKey]);
 
   const resetPwdForm = () => {
+    // 密码修改流程重置：回到“校验旧密码”第一步。
     setPwdStep(1);
     setOldPwd('');
     setNewPwd('');
@@ -75,6 +79,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const onVerifyOldPassword = async () => {
+    // 第一步：仅验证旧密码，不立即提交新密码。
     const p = oldPwd.trim();
     if (!p) {
       message.warning('请输入当前密码');
@@ -96,6 +101,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const openUsernameModal = () => {
+    // 冷却期内禁止打开修改弹窗，提前给出明确提示。
     if (!canChangeUsername) {
       message.info(`请于 ${nextUsernameChangeHint} 之后再次修改用户名`);
       return;
@@ -106,6 +112,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const saveUsernameFromModal = async () => {
+    // 用户名修改流程：本地校验 -> 服务端提交 -> 本地迁移同步。
     if (!loginKey) return;
     const v = idDraft.trim();
     if (!v) {
@@ -133,6 +140,7 @@ const ProfilePage: React.FC = () => {
         return;
       }
       const newK = (nextTok.userCode || v).trim();
+      // 迁移本地存储键，避免用户改名后历史数据“看似丢失”。
       migrateLocalNotebookStorageOnLoginIdChange(oldK, newK);
       migrateProfileLoginKey(oldK, newK);
       setLoginDisplayName(newK);
@@ -149,6 +157,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const onSubmitNewPassword = async () => {
+    // 第二步：提交新密码前执行长度与一致性校验。
     const o = oldPwd.trim();
     const n = newPwd;
     const c = confirmNewPwd;

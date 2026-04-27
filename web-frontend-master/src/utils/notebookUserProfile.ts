@@ -13,6 +13,7 @@ export type NotebookUserProfile = {
 type ProfileMap = Record<string, NotebookUserProfile>;
 
 function pickNotebookIdFromLegacy(v: object, key: string): string {
+  // 兼容历史字段，按新旧字段顺序提取 notebookId。
   const p = v as { notebookId?: string; wxId?: string; systemId?: string };
   const a = p.notebookId && String(p.notebookId).trim();
   if (a) return a;
@@ -24,6 +25,7 @@ function pickNotebookIdFromLegacy(v: object, key: string): string {
 }
 
 function parseAndClean(raw: string | null): ProfileMap {
+  // 解析并清洗本地资料，过滤掉非法结构数据。
   if (!raw) return {};
   try {
     const o = JSON.parse(raw) as Record<string, unknown>;
@@ -49,6 +51,7 @@ function saveMap(map: ProfileMap) {
 }
 
 function normalizeLoginKey(loginName: string): string {
+  // 统一键名清洗规则，避免前后空格导致多份记录。
   return loginName.trim();
 }
 
@@ -80,6 +83,7 @@ export function isValidNotebookId(s: string): boolean {
 }
 
 export function isNotebookIdTaken(notebookId: string, exceptLoginKey: string): boolean {
+  // 除当前账号外，检查用户名是否与其他本地资料冲突。
   const id = notebookId.trim();
   if (!id) return false;
   const map = loadMap();
@@ -97,6 +101,7 @@ export function getProfile(loginKey: string): NotebookUserProfile | undefined {
 }
 
 export function ensureProfile(loginKey: string): NotebookUserProfile {
+  // 不存在时创建默认资料，默认 notebookId 与登录键一致。
   const k = normalizeLoginKey(loginKey);
   const map = loadMap();
   if (map[k]) {
@@ -119,6 +124,7 @@ export function applyNotebookProfileFromToken(token: API.Token | null | undefine
 }
 
 export function migrateProfileLoginKey(oldKey: string, newKey: string): void {
+  // 用户改名后迁移本地资料键，避免“旧键留存”导致读取错位。
   const o = oldKey.trim();
   const n = newKey.trim();
   if (!o || !n || o === n) return;
@@ -133,6 +139,7 @@ export function migrateProfileLoginKey(oldKey: string, newKey: string): void {
 }
 
 export function saveProfile(loginKey: string, patch: Partial<Pick<NotebookUserProfile, 'notebookId'>>) {
+  // 本地保存前执行格式与唯一性校验，保持前端数据一致性。
   const k = normalizeLoginKey(loginKey);
   if (!k) return;
   ensureProfile(k);
